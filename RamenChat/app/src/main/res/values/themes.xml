@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.RamenChat" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="Theme.RamenChat.Splash" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/primary</item>
+        <item name="android:windowBackground">@color/primary</item>
+    </style>
+
+    <!-- Input field style -->
+    <style name="RamenInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/primary</item>
+        <item name="hintTextColor">@color/primary</item>
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+    </style>
+
+    <!-- Primary button -->
+    <style name="RamenButton" parent="Widget.Material3.Button">
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Outlined button -->
+    <style name="RamenButtonOutlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+</resources>

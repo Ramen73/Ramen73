@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_medium">16dp</dimen>
+    <dimen name="margin_large">24dp</dimen>
+    <dimen name="margin_xlarge">32dp</dimen>
+    <dimen name="avatar_size_small">40dp</dimen>
+    <dimen name="avatar_size_medium">52dp</dimen>
+    <dimen name="avatar_size_large">96dp</dimen>
+    <dimen name="corner_radius">16dp</dimen>
+    <dimen name="corner_radius_bubble">18dp</dimen>
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_body">14sp</dimen>
+    <dimen name="text_size_subtitle">16sp</dimen>
+    <dimen name="text_size_title">22sp</dimen>
+    <dimen name="text_size_headline">28sp</dimen>
+</resources>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RamenChat</string>
+    <string name="app_tagline">Connettiti con il mondo 🍜</string>
+
+    <!-- Login -->
+    <string name="login_title">Bentornato!</string>
+    <string name="login_subtitle">Accedi al tuo account</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_login">Accedi</string>
+    <string name="no_account">Non hai un account? <b>Registrati</b></string>
+
+    <!-- Register -->
+    <string name="register_title">Crea account</string>
+    <string name="register_subtitle">Unisciti a RamenChat!</string>
+    <string name="hint_name">Il tuo nome</string>
+    <string name="hint_confirm_password">Conferma password</string>
+    <string name="btn_register">Registrati</string>
+    <string name="have_account">Hai già un account? <b>Accedi</b></string>
+
+    <!-- Chat List -->
+    <string name="chats_title">Messaggi</string>
+    <string name="no_chats">Nessuna chat ancora.\nPremi + per iniziare!</string>
+
+    <!-- Chat -->
+    <string name="hint_message">Scrivi un messaggio…</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profilo</string>
+    <string name="hint_bio">La tua bio</string>
+    <string name="btn_save">Salva modifiche</string>
+    <string name="btn_logout">Esci</string>
+
+    <!-- New Chat -->
+    <string name="new_chat_title">Nuova chat</string>
+    <string name="hint_search">Cerca utenti…</string>
+    <string name="no_users">Nessun utente trovato</string>
+</resources>
