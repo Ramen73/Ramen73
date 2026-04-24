@@ -1,28 +1,17 @@
 package com.ramen73.ramenchat
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
 import com.ramen73.ramenchat.databinding.ActivityProfileBinding
 import com.ramen73.ramenchat.utils.FirebaseUtils
-import com.ramen73.ramenchat.utils.gone
 import com.ramen73.ramenchat.utils.toast
-import com.ramen73.ramenchat.utils.visible
 import kotlinx.coroutines.launch
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
-
-    private val pickImage = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { uploadPhoto(it) }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +22,13 @@ class ProfileActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        binding.fabEditPhoto.visibility = android.view.View.GONE
+        binding.ivAvatar.setOnClickListener {
+            toast("Abilita Firebase Storage per le foto profilo")
+        }
+
         loadCurrentUser()
 
-        binding.ivAvatar.setOnClickListener { pickImage.launch("image/*") }
-        binding.fabEditPhoto.setOnClickListener { pickImage.launch("image/*") }
         binding.btnSave.setOnClickListener { saveProfile() }
         binding.btnLogout.setOnClickListener { logout() }
     }
@@ -47,30 +39,6 @@ class ProfileActivity : AppCompatActivity() {
             binding.etName.setText(user.displayName)
             binding.etBio.setText(user.bio)
             binding.tvEmail.text = user.email
-            if (user.photoUrl.isNotEmpty()) {
-                Glide.with(this@ProfileActivity)
-                    .load(user.photoUrl)
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_default_avatar)
-                    .into(binding.ivAvatar)
-            }
-        }
-    }
-
-    private fun uploadPhoto(uri: Uri) {
-        binding.progressBar.visible()
-        lifecycleScope.launch {
-            try {
-                val path = "users/${FirebaseUtils.currentUserId}/profile.jpg"
-                val url = FirebaseUtils.uploadImage(uri, path)
-                FirebaseUtils.updateProfilePhoto(url)
-                Glide.with(this@ProfileActivity).load(url).circleCrop().into(binding.ivAvatar)
-                toast("Foto profilo aggiornata!")
-            } catch (e: Exception) {
-                toast("Errore nel caricamento: ${e.localizedMessage}")
-            } finally {
-                binding.progressBar.gone()
-            }
         }
     }
 
