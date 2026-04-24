@@ -45,13 +45,9 @@ class RegisterActivity : AppCompatActivity() {
                 val result = FirebaseUtils.auth
                     .createUserWithEmailAndPassword(email, password).await()
                 val uid = result.user!!.uid
-                val user = User(
-                    uid = uid,
-                    displayName = name,
-                    email = email,
-                    online = true
-                )
+                val user = User(uid = uid, displayName = name, email = email, online = true)
                 FirebaseUtils.saveUser(user)
+                FirebaseUtils.refreshAndSaveFcmToken()
                 startActivity(Intent(this@RegisterActivity, ChatListActivity::class.java)
                     .apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK })
             } catch (e: Exception) {

@@ -11,6 +11,7 @@ import com.ramen73.ramenchat.model.ChatRoom
 import com.ramen73.ramenchat.model.Message
 import com.ramen73.ramenchat.model.User
 import com.ramen73.ramenchat.utils.FirebaseUtils
+import com.ramen73.ramenchat.utils.NotificationHelper
 import com.ramen73.ramenchat.utils.toast
 import kotlinx.coroutines.launch
 
@@ -20,6 +21,7 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var adapter: MessageAdapter
     private lateinit var chatId: String
     private var otherUser: User? = null
+    private var lastMessageCount = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +35,11 @@ class ChatActivity : AppCompatActivity() {
         setupRecyclerView()
         loadChatRoom()
         observeMessages()
+        observeOtherUserStatus()
 
         binding.btnSend.setOnClickListener { sendTextMessage() }
-        binding.btnRecord.gone()
-        binding.tvRecordingHint.gone()
+        binding.btnRecord.visibility = android.view.View.GONE
+        binding.tvRecordingHint.visibility = android.view.View.GONE
     }
 
     private fun setupToolbar() {
@@ -53,6 +56,15 @@ class ChatActivity : AppCompatActivity() {
             }
             binding.tvStatus.text = if (user.online) "Online" else "Offline"
         }
+    }
+
+    private fun observeOtherUserStatus() {
+        val uid = otherUser?.uid ?: return
+        FirebaseUtils.usersCollection.document(uid)
+            .addSnapshotListener { snapshot, _ ->
+                val user = snapshot?.toObject(User::class.java) ?: return@addSnapshotListener
+                binding.tvStatus.text = if (user.online) "Online" else "Offline"
+            }
     }
 
     private fun loadChatRoom() {
@@ -80,11 +92,18 @@ class ChatActivity : AppCompatActivity() {
             .addSnapshotListener { snapshot, _ ->
                 if (snapshot == null) return@addSnapshotListener
                 val messages = snapshot.toObjects(Message::class.java)
+                val isNewIncomingMessage = lastMessageCount >= 0 &&
+                    messages.size > lastMessageCount &&
+                    messages.last().senderId != FirebaseUtils.currentUserId
                 adapter.submitList(messages) {
                     if (messages.isNotEmpty()) {
                         binding.rvMessages.scrollToPosition(messages.size - 1)
                     }
                 }
+                if (isNewIncomingMessage) {
+                    NotificationHelper.playInAppSound(this)
+                }
+                lastMessageCount = messages.size
             }
     }
 
@@ -101,5 +120,13 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    private fun android.view.View.gone() { visibility = android.view.View.GONE }
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch { FirebaseUtils.updateOnlineStatus(true) }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        lifecycleScope.launch { FirebaseUtils.updateOnlineStatus(false) }
+    }
 }

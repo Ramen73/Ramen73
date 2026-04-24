@@ -12,5 +12,6 @@ data class User(
     val photoUrl: String = "",
     val bio: String = "",
     val online: Boolean = false,
-    val lastSeen: Long = 0L
+    val lastSeen: Long = 0L,
+    val fcmToken: String = ""
 ) : Parcelable

@@ -41,6 +41,7 @@ class LoginActivity : AppCompatActivity() {
             try {
                 FirebaseUtils.auth.signInWithEmailAndPassword(email, password).await()
                 FirebaseUtils.updateOnlineStatus(true)
+                FirebaseUtils.refreshAndSaveFcmToken()
                 startActivity(Intent(this@LoginActivity, ChatListActivity::class.java))
                 finish()
             } catch (e: Exception) {

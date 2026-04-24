@@ -5,12 +5,19 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.ktx.storage
+import com.ramen73.ramenchat.AppConfig
 import com.ramen73.ramenchat.model.ChatRoom
 import com.ramen73.ramenchat.model.Message
 import com.ramen73.ramenchat.model.User
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
 
 object FirebaseUtils {
@@ -63,28 +70,62 @@ object FirebaseUtils {
             .update("photoUrl", url).await()
     }
 
-    /** Case-insensitive user search by name and email */
+    // ── FCM helpers ──────────────────────────────────────────────────────────
+    suspend fun refreshAndSaveFcmToken() {
+        if (currentUserId.isBlank()) return
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
+            usersCollection.document(currentUserId).update("fcmToken", token).await()
+        } catch (_: Exception) {}
+    }
+
+    suspend fun saveFcmToken(token: String) {
+        if (currentUserId.isBlank()) return
+        try {
+            usersCollection.document(currentUserId).update("fcmToken", token).await()
+        } catch (_: Exception) {}
+    }
+
+    suspend fun sendPushNotification(recipientId: String, senderName: String, messageBody: String) {
+        if (AppConfig.FCM_SERVER_KEY == "INSERISCI_LA_TUA_CHIAVE_SERVER_FCM_QUI") return
+        val recipient = getUser(recipientId) ?: return
+        val token = recipient.fcmToken.ifEmpty { return }
+        withContext(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("to", token)
+                    put("notification", JSONObject().apply {
+                        put("title", "RamenChat – $senderName")
+                        put("body", messageBody)
+                        put("sound", "default")
+                    })
+                }
+                val conn = URL("https://fcm.googleapis.com/fcm/send")
+                    .openConnection() as HttpURLConnection
+                conn.apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Authorization", "key=${AppConfig.FCM_SERVER_KEY}")
+                    setRequestProperty("Content-Type", "application/json")
+                    doOutput = true
+                    outputStream.write(json.toString().toByteArray())
+                    responseCode
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    // ── Search ───────────────────────────────────────────────────────────────
+    /** Case-insensitive partial search: works with any name, also without displayNameLower field */
     suspend fun searchUsers(query: String): List<User> {
-        val q = query.lowercase(Locale.getDefault())
-        val end = q + ""
-
-        val byName = try {
-            usersCollection
-                .orderBy("displayNameLower")
-                .startAt(q).endAt(end)
-                .limit(20).get().await()
-                .toObjects(User::class.java)
-        } catch (e: Exception) { emptyList() }
-
-        val byEmail = usersCollection
-            .orderBy("email")
-            .startAt(q).endAt(end)
-            .limit(20).get().await()
-            .toObjects(User::class.java)
-
-        return (byName + byEmail)
-            .distinctBy { it.uid }
-            .filter { it.uid != currentUserId }
+        val q = query.lowercase(Locale.getDefault()).trim()
+        if (q.isEmpty()) return emptyList()
+        val all = usersCollection.get().await().toObjects(User::class.java)
+        return all.filter { user ->
+            user.uid != currentUserId && (
+                user.displayName.lowercase(Locale.getDefault()).contains(q) ||
+                user.email.lowercase(Locale.getDefault()).contains(q)
+            )
+        }
     }
 
     // ── Upload helpers ───────────────────────────────────────────────────────
@@ -124,10 +165,7 @@ object FirebaseUtils {
         return chatId
     }
 
-    suspend fun createGroupChat(
-        groupName: String,
-        memberIds: List<String>
-    ): String {
+    suspend fun createGroupChat(groupName: String, memberIds: List<String>): String {
         val allMembers = (memberIds + currentUserId).distinct()
         val chatRef = chatsCollection.document()
         val names = mutableMapOf<String, String>()
@@ -181,30 +219,12 @@ object FirebaseUtils {
             type = Message.TYPE_TEXT
         )
         sendMessageInternal(chatId, message, text)
+        if (receiverId.isNotEmpty()) {
+            sendPushNotification(receiverId, me?.displayName ?: "Qualcuno", text)
+        }
     }
 
-    suspend fun sendImageMessage(chatId: String, imageUri: Uri, receiverId: String = "") {
-        val me = getUser(currentUserId)
-        val now = System.currentTimeMillis()
-        val path = "chats/$chatId/images/$now.jpg"
-        val url = uploadImage(imageUri, path)
-        val message = Message(
-            senderId = currentUserId,
-            senderName = me?.displayName ?: "",
-            receiverId = receiverId,
-            imageUrl = url,
-            timestamp = now,
-            type = Message.TYPE_IMAGE
-        )
-        sendMessageInternal(chatId, message, "📷 Foto")
-    }
-
-    suspend fun sendAudioMessage(
-        chatId: String,
-        audioFile: File,
-        durationMs: Long,
-        receiverId: String = ""
-    ) {
+    suspend fun sendAudioMessage(chatId: String, audioFile: File, durationMs: Long, receiverId: String = "") {
         val me = getUser(currentUserId)
         val now = System.currentTimeMillis()
         val path = "chats/$chatId/audio/$now.m4a"
@@ -219,5 +239,8 @@ object FirebaseUtils {
             type = Message.TYPE_AUDIO
         )
         sendMessageInternal(chatId, message, "🎤 Messaggio vocale")
+        if (receiverId.isNotEmpty()) {
+            sendPushNotification(receiverId, me?.displayName ?: "Qualcuno", "🎤 Messaggio vocale")
+        }
     }
 }
