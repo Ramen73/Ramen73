@@ -6,12 +6,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.ramen73.ramenchat.R
 import com.ramen73.ramenchat.databinding.ItemMessageReceivedBinding
 import com.ramen73.ramenchat.databinding.ItemMessageSentBinding
 import com.ramen73.ramenchat.model.Message
 import com.ramen73.ramenchat.utils.AudioPlayer
 import com.ramen73.ramenchat.utils.toFullTimeString
+import java.util.Locale
 
 class MessageAdapter(
     private val currentUserId: String
@@ -40,7 +40,7 @@ class MessageAdapter(
                 binding.audioContainer, binding.btnPlayPause, binding.tvDuration,
                 null,
                 msg
-            )
+            ) { notifyItemChanged(bindingAdapterPosition) }
         }
     }
 
@@ -57,7 +57,7 @@ class MessageAdapter(
                 binding.audioContainer, binding.btnPlayPause, binding.tvDuration,
                 binding.tvSenderName,
                 msg
-            )
+            ) { notifyItemChanged(bindingAdapterPosition) }
         }
     }
 
@@ -68,7 +68,8 @@ class MessageAdapter(
         btnPlayPause: android.widget.ImageView,
         tvDuration: android.widget.TextView,
         @Suppress("UNUSED_PARAMETER") tvSenderName: android.widget.TextView?,
-        msg: Message
+        msg: Message,
+        notifyChange: () -> Unit
     ) {
         tvTime.text = msg.timestamp.toFullTimeString()
         when (msg.type) {
@@ -76,13 +77,13 @@ class MessageAdapter(
                 tvMessage.visibility = View.GONE
                 audioContainer.visibility = View.VISIBLE
                 val secs = (msg.audioDuration / 1000).toInt()
-                tvDuration.text = String.format("%d:%02d", secs / 60, secs % 60)
+                tvDuration.text = String.format(Locale.getDefault(), "%d:%02d", secs / 60, secs % 60)
                 btnPlayPause.setImageResource(
                     if (AudioPlayer.isPlaying(msg.audioUrl)) android.R.drawable.ic_media_pause
                     else android.R.drawable.ic_media_play
                 )
                 audioContainer.setOnClickListener {
-                    val started = AudioPlayer.toggle(msg.audioUrl) { notifyItemChanged(bindingAdapterPosition) }
+                    val started = AudioPlayer.toggle(msg.audioUrl) { notifyChange() }
                     btnPlayPause.setImageResource(
                         if (started) android.R.drawable.ic_media_pause
                         else android.R.drawable.ic_media_play
