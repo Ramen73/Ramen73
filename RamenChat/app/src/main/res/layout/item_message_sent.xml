@@ -26,6 +26,42 @@
             android:textSize="15sp"
             android:lineSpacingExtra="2dp" />
 
+        <LinearLayout
+            android:id="@+id/audioContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:minWidth="180dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/btnPlayPause"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_media_play"
+                app:tint="@color/bubble_sent_text"
+                android:contentDescription="Play" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="3dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="8dp"
+                android:background="#FFFFFF"
+                android:alpha="0.6" />
+
+            <TextView
+                android:id="@+id/tvDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/bubble_sent_text"
+                android:textSize="12sp"
+                android:text="0:00" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvTime"
             android:layout_width="wrap_content"
@@ -33,6 +69,7 @@
             android:layout_gravity="end"
             android:layout_marginTop="4dp"
             android:textColor="#FFEDD5"
-            android:textSize="11sp" />
+            android:textSize="11sp"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
     </LinearLayout>
 </LinearLayout>

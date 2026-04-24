@@ -1,20 +1,28 @@
 package com.ramen73.ramenchat
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.ramen73.ramenchat.databinding.ActivityProfileBinding
-import com.ramen73.ramenchat.model.User
 import com.ramen73.ramenchat.utils.FirebaseUtils
+import com.ramen73.ramenchat.utils.gone
 import com.ramen73.ramenchat.utils.toast
+import com.ramen73.ramenchat.utils.visible
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
+
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { uploadPhoto(it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +35,8 @@ class ProfileActivity : AppCompatActivity() {
 
         loadCurrentUser()
 
+        binding.ivAvatar.setOnClickListener { pickImage.launch("image/*") }
+        binding.fabEditPhoto.setOnClickListener { pickImage.launch("image/*") }
         binding.btnSave.setOnClickListener { saveProfile() }
         binding.btnLogout.setOnClickListener { logout() }
     }
@@ -47,14 +57,30 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
+    private fun uploadPhoto(uri: Uri) {
+        binding.progressBar.visible()
+        lifecycleScope.launch {
+            try {
+                val path = "users/${FirebaseUtils.currentUserId}/profile.jpg"
+                val url = FirebaseUtils.uploadImage(uri, path)
+                FirebaseUtils.updateProfilePhoto(url)
+                Glide.with(this@ProfileActivity).load(url).circleCrop().into(binding.ivAvatar)
+                toast("Foto profilo aggiornata!")
+            } catch (e: Exception) {
+                toast("Errore nel caricamento: ${e.localizedMessage}")
+            } finally {
+                binding.progressBar.gone()
+            }
+        }
+    }
+
     private fun saveProfile() {
         val name = binding.etName.text.toString().trim()
         val bio = binding.etBio.text.toString().trim()
         if (name.isEmpty()) { toast("Il nome non può essere vuoto"); return }
         lifecycleScope.launch {
             try {
-                FirebaseUtils.usersCollection.document(FirebaseUtils.currentUserId)
-                    .update(mapOf("displayName" to name, "bio" to bio)).await()
+                FirebaseUtils.updateProfile(name, bio)
                 toast("Profilo aggiornato!")
             } catch (e: Exception) {
                 toast("Errore nel salvataggio")

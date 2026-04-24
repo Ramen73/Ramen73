@@ -2,8 +2,11 @@ package com.ramen73.ramenchat
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.PopupMenu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.google.firebase.firestore.Query
 import com.ramen73.ramenchat.adapter.ChatListAdapter
 import com.ramen73.ramenchat.databinding.ActivityChatListBinding
@@ -11,9 +14,9 @@ import com.ramen73.ramenchat.model.ChatRoom
 import com.ramen73.ramenchat.model.User
 import com.ramen73.ramenchat.utils.FirebaseUtils
 import com.ramen73.ramenchat.utils.gone
+import com.ramen73.ramenchat.utils.toast
 import com.ramen73.ramenchat.utils.visible
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class ChatListActivity : AppCompatActivity() {
 
@@ -29,9 +32,21 @@ class ChatListActivity : AppCompatActivity() {
         setupRecyclerView()
         observeChats()
 
-        binding.fabNewChat.setOnClickListener {
-            startActivity(Intent(this, NewChatActivity::class.java))
+        binding.fabNewChat.setOnClickListener { showNewChatMenu(it) }
+    }
+
+    private fun showNewChatMenu(anchor: View) {
+        val menu = PopupMenu(this, anchor)
+        menu.menu.add("Nuova chat")
+        menu.menu.add("Nuovo gruppo")
+        menu.setOnMenuItemClickListener { item ->
+            when (item.title) {
+                "Nuova chat" -> startActivity(Intent(this, NewChatActivity::class.java))
+                "Nuovo gruppo" -> startActivity(Intent(this, NewGroupActivity::class.java))
+            }
+            true
         }
+        menu.show()
     }
 
     private fun setupToolbar() {
@@ -39,13 +54,24 @@ class ChatListActivity : AppCompatActivity() {
         binding.ivProfile.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
+        // Load own avatar in the toolbar
+        lifecycleScope.launch {
+            val me = FirebaseUtils.getUser(FirebaseUtils.currentUserId)
+            if (!me?.photoUrl.isNullOrEmpty()) {
+                Glide.with(this@ChatListActivity)
+                    .load(me?.photoUrl)
+                    .placeholder(R.drawable.ic_default_avatar)
+                    .circleCrop()
+                    .into(binding.ivProfile)
+            }
+        }
     }
 
     private fun setupRecyclerView() {
         adapter = ChatListAdapter { chatRoom ->
             val intent = Intent(this, ChatActivity::class.java).apply {
                 putExtra("CHAT_ID", chatRoom.chatId)
-                putExtra("OTHER_USER", chatRoom.otherUser)
+                if (!chatRoom.isGroup) putExtra("OTHER_USER", chatRoom.otherUser)
             }
             startActivity(intent)
         }
@@ -56,7 +82,12 @@ class ChatListActivity : AppCompatActivity() {
         FirebaseUtils.chatsCollection
             .whereArrayContains("participants", FirebaseUtils.currentUserId)
             .orderBy("lastMessageTime", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, _ ->
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    android.util.Log.e("ChatList", "Firestore error", error)
+                    toast("Errore: ${error.localizedMessage}")
+                    return@addSnapshotListener
+                }
                 if (snapshot == null) return@addSnapshotListener
                 val rooms = snapshot.toObjects(ChatRoom::class.java)
                 if (rooms.isEmpty()) {
@@ -69,9 +100,14 @@ class ChatListActivity : AppCompatActivity() {
                 binding.rvChats.visible()
                 lifecycleScope.launch {
                     val enriched = rooms.map { room ->
-                        val otherId = room.participants.first { it != FirebaseUtils.currentUserId }
-                        val other = FirebaseUtils.getUser(otherId) ?: User(uid = otherId)
-                        room.copy(otherUser = other)
+                        if (room.isGroup) {
+                            room
+                        } else {
+                            val otherId = room.participants.firstOrNull { it != FirebaseUtils.currentUserId }
+                                ?: return@map room
+                            val other = FirebaseUtils.getUser(otherId) ?: User(uid = otherId)
+                            room.copy(otherUser = other)
+                        }
                     }
                     adapter.submitList(enriched)
                 }

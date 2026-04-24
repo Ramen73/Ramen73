@@ -1,6 +1,7 @@
 package com.ramen73.ramenchat.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -17,21 +18,27 @@ class ChatListAdapter(
 
     inner class VH(val binding: ItemChatRoomBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(room: ChatRoom) {
-            val user = room.otherUser
-            binding.tvName.text = user.displayName.ifEmpty { "Utente sconosciuto" }
+            if (room.isGroup) {
+                binding.tvName.text = room.groupName.ifEmpty { "Gruppo" }
+                binding.ivAvatar.setImageResource(R.drawable.ic_group_avatar)
+                binding.viewOnline.visibility = View.INVISIBLE
+            } else {
+                val user = room.otherUser
+                binding.tvName.text = user.displayName.ifEmpty { "Utente sconosciuto" }
+                binding.viewOnline.visibility = if (user.online) View.VISIBLE else View.INVISIBLE
+                if (user.photoUrl.isNotEmpty()) {
+                    Glide.with(binding.root.context)
+                        .load(user.photoUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_default_avatar)
+                        .into(binding.ivAvatar)
+                } else {
+                    binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar)
+                }
+            }
+
             binding.tvLastMessage.text = room.lastMessage.ifEmpty { "Inizia la conversazione!" }
             binding.tvTime.text = if (room.lastMessageTime > 0) room.lastMessageTime.toTimeString() else ""
-            binding.viewOnline.visibility = if (user.isOnline) android.view.View.VISIBLE else android.view.View.INVISIBLE
-
-            if (user.photoUrl.isNotEmpty()) {
-                Glide.with(binding.root.context)
-                    .load(user.photoUrl)
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_default_avatar)
-                    .into(binding.ivAvatar)
-            } else {
-                binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar)
-            }
             binding.root.setOnClickListener { onClick(room) }
         }
     }

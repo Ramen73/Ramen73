@@ -49,7 +49,7 @@ class RegisterActivity : AppCompatActivity() {
                     uid = uid,
                     displayName = name,
                     email = email,
-                    isOnline = true
+                    online = true
                 )
                 FirebaseUtils.saveUser(user)
                 startActivity(Intent(this@RegisterActivity, ChatListActivity::class.java)

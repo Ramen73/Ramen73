@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -58,7 +57,21 @@
         </LinearLayout>
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <!-- Messages list -->
+    <TextView
+        android:id="@+id/tvRecordingHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🎤 Stai registrando… rilascia per inviare"
+        android:textColor="@color/error"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:background="@color/surface"
+        android:padding="10dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMessages"
         android:layout_width="match_parent"
@@ -73,7 +86,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Message input -->
     <LinearLayout
         android:id="@+id/messageInputContainer"
         android:layout_width="match_parent"
@@ -114,6 +126,17 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:src="@android:drawable/ic_menu_send"
+            app:backgroundTint="@color/primary"
+            app:tint="@color/on_primary"
+            app:fabSize="mini" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnRecord"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:contentDescription="Registra audio"
+            android:src="@android:drawable/ic_btn_speak_now"
             app:backgroundTint="@color/primary"
             app:tint="@color/on_primary"
             app:fabSize="mini" />

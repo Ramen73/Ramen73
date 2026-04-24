@@ -9,21 +9,28 @@
 
 1. Vai su [Firebase Console](https://console.firebase.google.com)
 2. Crea un nuovo progetto → **RamenChat**
-3. Aggiungi app Android:
-   - Package name: `com.ramen73.ramenchat`
-   - App nickname: RamenChat
-4. Scarica `google-services.json` e **sostituisci** il file placeholder in `app/google-services.json`
+3. Aggiungi app Android con package name: `com.ramen73.ramenchat`
+4. Scarica `google-services.json` e sostituisci il file in `app/google-services.json`
 
-### Abilita i servizi Firebase:
+## 2. Abilita Authentication
 
-**Authentication**
-- Firebase Console → Authentication → Sign-in method
-- Abilita **Email/Password**
+Firebase Console → **Authentication** → **Sign-in method** → abilita **Email/Password**
 
-**Firestore Database**
-- Firebase Console → Firestore Database → Create database
-- Seleziona **Start in test mode** (poi configura le regole di sicurezza)
-- Regole consigliate:
+## 3. Crea il database Firestore
+
+Firebase Console → **Firestore Database** → **Crea database** → **modalità test**
+
+### ⚠️ Indice composto necessario
+
+Per la lista chat serve un indice composto. Se non esiste, la prima volta che l'app
+parte vedrai un messaggio di errore con un **link**: clicca quel link e Firebase
+creerà l'indice automaticamente.
+
+Manualmente: Firestore → Indici → Aggiungi indice composto:
+- Collezione: `chats`
+- Campi: `participants` (array), `lastMessageTime` (descending)
+
+### Regole consigliate (produzione)
 ```
 rules_version = '2';
 service cloud.firestore {
@@ -33,70 +40,61 @@ service cloud.firestore {
       allow write: if request.auth.uid == userId;
     }
     match /chats/{chatId} {
-      allow read, write: if request.auth != null &&
+      allow read, update: if request.auth != null &&
         request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.auth.uid in request.resource.data.participants;
       match /messages/{msgId} {
-        allow read, write: if request.auth != null;
+        allow read, create: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
       }
     }
   }
 }
 ```
 
-**Storage** (per foto profilo future)
-- Firebase Console → Storage → Get started
+## 4. Abilita Storage (per foto profilo + audio)
 
-## 2. Apri in Android Studio
+Firebase Console → **Storage** → **Inizia**
 
-```bash
+Regole consigliate:
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+    match /chats/{chatId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+## 5. Apri in Android Studio
+
+```
 File → Open → seleziona la cartella RamenChat/
 ```
 
-Attendi che Gradle sincronizzi le dipendenze.
-
-## 3. Esegui l'app
-
-- Connetti un dispositivo Android (API 24+) o avvia un emulatore
-- Premi ▶ Run
+Attendi Gradle sync, collega dispositivo o emulatore, premi ▶.
 
 ## Funzionalità
 
 | Schermata | Funzione |
 |-----------|----------|
-| Splash | Logo animato, controllo sessione |
-| Login | Accesso con email e password |
-| Registrazione | Crea account con nome, email, password |
-| Chat List | Lista tutte le conversazioni, indicatore online |
-| Chat | Messaggi in tempo reale con Firebase Firestore |
-| Nuova Chat | Cerca utenti per nome |
-| Profilo | Modifica nome/bio, logout |
+| Splash | Controllo sessione |
+| Login/Registrazione | Email + password |
+| Chat List | Lista cronologia conversazioni, online indicator |
+| Chat | Messaggi testo + **audio** in tempo reale |
+| Nuovo gruppo | **Chat di gruppo** con più partecipanti |
+| Profilo | Modifica nome/bio, **foto profilo**, logout |
 
-## Struttura del progetto
-
-```
-app/src/main/
-├── java/com/ramen73/ramenchat/
-│   ├── SplashActivity.kt
-│   ├── LoginActivity.kt
-│   ├── RegisterActivity.kt
-│   ├── ChatListActivity.kt
-│   ├── ChatActivity.kt
-│   ├── NewChatActivity.kt
-│   ├── ProfileActivity.kt
-│   ├── adapter/
-│   │   ├── ChatListAdapter.kt
-│   │   ├── MessageAdapter.kt
-│   │   └── UserSearchAdapter.kt
-│   ├── model/
-│   │   ├── User.kt
-│   │   ├── Message.kt
-│   │   └── ChatRoom.kt
-│   └── utils/
-│       ├── FirebaseUtils.kt
-│       └── Extensions.kt
-└── res/
-    ├── layout/       (tutte le schermate)
-    ├── drawable/     (bolle messaggi, avatar, sfondi)
-    └── values/       (colori arancione ramen, temi, stringhe)
-```
+## Novità ultimi aggiornamenti
+- ✅ Foto profilo caricabili
+- ✅ Messaggi vocali (tieni premuto il microfono)
+- ✅ Chat di gruppo
+- ✅ Ricerca utenti case-insensitive
+- ✅ Fix stato online/offline

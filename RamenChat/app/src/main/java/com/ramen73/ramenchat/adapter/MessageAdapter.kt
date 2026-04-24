@@ -1,18 +1,23 @@
 package com.ramen73.ramenchat.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.ramen73.ramenchat.R
 import com.ramen73.ramenchat.databinding.ItemMessageReceivedBinding
 import com.ramen73.ramenchat.databinding.ItemMessageSentBinding
 import com.ramen73.ramenchat.model.Message
+import com.ramen73.ramenchat.utils.AudioPlayer
 import com.ramen73.ramenchat.utils.toFullTimeString
 
 class MessageAdapter(
     private val currentUserId: String
 ) : ListAdapter<Message, RecyclerView.ViewHolder>(DIFF) {
+
+    var isGroup: Boolean = false
 
     companion object {
         private const val VIEW_SENT = 1
@@ -30,15 +35,65 @@ class MessageAdapter(
 
     inner class SentVH(val binding: ItemMessageSentBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(msg: Message) {
-            binding.tvMessage.text = msg.text
-            binding.tvTime.text = msg.timestamp.toFullTimeString()
+            bindCommon(
+                binding.tvMessage, binding.tvTime,
+                binding.audioContainer, binding.btnPlayPause, binding.tvDuration,
+                null,
+                msg
+            )
         }
     }
 
     inner class ReceivedVH(val binding: ItemMessageReceivedBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(msg: Message) {
-            binding.tvMessage.text = msg.text
-            binding.tvTime.text = msg.timestamp.toFullTimeString()
+            if (isGroup && msg.senderName.isNotEmpty()) {
+                binding.tvSenderName.visibility = View.VISIBLE
+                binding.tvSenderName.text = msg.senderName
+            } else {
+                binding.tvSenderName.visibility = View.GONE
+            }
+            bindCommon(
+                binding.tvMessage, binding.tvTime,
+                binding.audioContainer, binding.btnPlayPause, binding.tvDuration,
+                binding.tvSenderName,
+                msg
+            )
+        }
+    }
+
+    private fun bindCommon(
+        tvMessage: android.widget.TextView,
+        tvTime: android.widget.TextView,
+        audioContainer: View,
+        btnPlayPause: android.widget.ImageView,
+        tvDuration: android.widget.TextView,
+        @Suppress("UNUSED_PARAMETER") tvSenderName: android.widget.TextView?,
+        msg: Message
+    ) {
+        tvTime.text = msg.timestamp.toFullTimeString()
+        when (msg.type) {
+            Message.TYPE_AUDIO -> {
+                tvMessage.visibility = View.GONE
+                audioContainer.visibility = View.VISIBLE
+                val secs = (msg.audioDuration / 1000).toInt()
+                tvDuration.text = String.format("%d:%02d", secs / 60, secs % 60)
+                btnPlayPause.setImageResource(
+                    if (AudioPlayer.isPlaying(msg.audioUrl)) android.R.drawable.ic_media_pause
+                    else android.R.drawable.ic_media_play
+                )
+                audioContainer.setOnClickListener {
+                    val started = AudioPlayer.toggle(msg.audioUrl) { notifyItemChanged(bindingAdapterPosition) }
+                    btnPlayPause.setImageResource(
+                        if (started) android.R.drawable.ic_media_pause
+                        else android.R.drawable.ic_media_play
+                    )
+                }
+            }
+            else -> {
+                audioContainer.visibility = View.GONE
+                tvMessage.visibility = View.VISIBLE
+                tvMessage.text = msg.text
+            }
         }
     }
 
