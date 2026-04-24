@@ -63,16 +63,28 @@ object FirebaseUtils {
             .update("photoUrl", url).await()
     }
 
-    /** Case-insensitive user search */
+    /** Case-insensitive user search by name and email */
     suspend fun searchUsers(query: String): List<User> {
         val q = query.lowercase(Locale.getDefault())
-        val snap = usersCollection
-            .orderBy("displayNameLower")
-            .startAt(q)
-            .endAt(q + "")
-            .limit(30)
-            .get().await()
-        return snap.toObjects(User::class.java).filter { it.uid != currentUserId }
+        val end = q + ""
+
+        val byName = try {
+            usersCollection
+                .orderBy("displayNameLower")
+                .startAt(q).endAt(end)
+                .limit(20).get().await()
+                .toObjects(User::class.java)
+        } catch (e: Exception) { emptyList() }
+
+        val byEmail = usersCollection
+            .orderBy("email")
+            .startAt(q).endAt(end)
+            .limit(20).get().await()
+            .toObjects(User::class.java)
+
+        return (byName + byEmail)
+            .distinctBy { it.uid }
+            .filter { it.uid != currentUserId }
     }
 
     // ── Upload helpers ───────────────────────────────────────────────────────
