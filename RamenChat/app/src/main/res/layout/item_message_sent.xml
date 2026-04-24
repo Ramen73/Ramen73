@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -69,7 +70,6 @@
             android:layout_gravity="end"
             android:layout_marginTop="4dp"
             android:textColor="#FFEDD5"
-            android:textSize="11sp"
-            xmlns:app="http://schemas.android.com/apk/res-auto" />
+            android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>
