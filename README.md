@@ -1,12 +1,21 @@
-- 👋 Hi, I’m @Ramen73;
-- 👀 I’m interested in exploring AI-driven solutions and enhancing creative workflows;
-- 🌱 I’m currently learning how to integrate advanced AI models with real-world applications;
-- 💞️ I’m looking to collaborate on projects that involve prompt engineering, AI tools, and user-centric app development;
-- 📫 How to reach me via GitHub issues or at siinodavide73@gmail.com
-- 😄 Pronouns: Mr.;
-- ⚡ Fun fact: I can design powerful prompts that simulate complex scenarios in just a few lines!
+# Hi, I'm Davide
 
-<!---
-Ramen73/Ramen73 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+I'm an independent digital product creator exploring how AI can turn ideas into practical, user-focused applications.
+
+## Current projects
+
+- **[Ghost Chat Android](https://github.com/Ramen73/GhostChatAndroid)** - a Firebase-based messaging app with real-time chat, notifications and WebRTC audio calls.
+- **Panormus Site** - a web project focused on presenting Palermo through a distinctive digital experience.
+
+## What I'm working on
+
+- Applying AI-assisted workflows to real products
+- Improving Android, Firebase and WebRTC integrations
+- Designing clear interfaces around real user needs
+- Learning through experimentation, iteration and collaboration
+
+## Collaboration
+
+I'm open to working with engineers and creators who can help review, improve and complete these projects. The best way to reach me is through GitHub issues or discussions in the relevant repository.
+
+> I may not write every line alone, but I care deeply about the idea, the user experience and making the final product work.
