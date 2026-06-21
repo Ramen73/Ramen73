@@ -1,0 +1,3 @@
+-keep class com.ramen73.ramenchat.model.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
